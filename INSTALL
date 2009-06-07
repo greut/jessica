@@ -1,0 +1,11 @@
+Running the tests
+
+$ python setup.py test
+
+Installation in normal mode
+
+$ sudo python setup.py install
+
+Installation in developer mode
+
+$ sudo python setup.py develop

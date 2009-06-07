@@ -74,8 +74,8 @@ class Jessica(object):
 
 class JessicaMiddleware(Jessica):
     """WSGI Middleware that intercept messages posted into environ["Jessica"]
-    and send them via AMQP
-    """
+    and send them via AMQP"""
+
     def __init__(self, application, config=None, **kwargs):
         super(JessicaMiddleware, self).__init__(config, **kwargs)
         self.application = application

@@ -11,9 +11,9 @@ from jessica import JessicaMiddleware
 
 
 class JessicaMock(JessicaMiddleware):
-    """A fake Jessica that doesn't require a running AMQP server
-    to be runned; sent messages are stored into `msgs`.
-    """
+    """A fake Jessica middleware that doesn't require a running AMQP server
+    to be runned; sent messages are stored into `msgs`."""
+
     def __init__(self, *args, **kwargs):
         super(JessicaMock, self).__init__(*args, **kwargs)
         self.msgs = []
@@ -30,6 +30,7 @@ class JessicaMock(JessicaMiddleware):
 
 
 class TestJessica(unittest.TestCase):
+
     @staticmethod
     def app(environ, start_response):
         start_response('200 OK', [('Content-Type', 'text/plain')])
@@ -53,25 +54,6 @@ class TestJessica(unittest.TestCase):
         assert mock.msgs[0][0] == 'Test'
         assert mock.msgs[0][1].body == 'Hello, World!'
         assert res.body == 'Hello, world!'
-    
-    def testPickle(self):
-        mock = JessicaMock(self.app, {'pickle': True})
-        
-        app = TestApp(mock)
-        res = app.get('/')
-        
-        assert len(mock.msgs) == 1
-        assert mock.msgs[0][0] == 'Test'
-        assert pickle.loads(mock.msgs[0][1].body) =='Hello, World!'
-    
-    def testDurable(self):
-        mock = JessicaMock(self.app, {'durable': True})
-        
-        app = TestApp(mock)
-        res = app.get('/')
-        assert len(mock.msgs) == 1
-        assert mock.msgs[0][0] == 'Test'
-        assert mock.msgs[0][1].properties['delivery_mode'] == 2
 
     def testMultiple(self):
         mock = JessicaMock(self.app2)
@@ -84,4 +66,3 @@ class TestJessica(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-

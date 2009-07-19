@@ -4,7 +4,6 @@
 import pickle
 import unittest
 
-from webtest import TestApp
 from mock import Mock
 
 from jessica import Jessica

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-VERSION = (0, 1, 0)
+VERSION = (0, 1, 1)
 __author__ = "Yoan Blanc <yoan@dosimple.ch>"
 __license__ = "BSD"
 
@@ -41,12 +41,12 @@ class Jessica(object):
         self.connect()
 
     def __del__(self):
-        logging.info("Disconnecting from %(host)s" % self.config)
+        log.info("Disconnecting from %(host)s" % self.config)
         self.chan.close()
         self.conn.close()
 
     def connect(self):
-        logging.info("Connecting to %(host)s" % self.config)
+        log.info("Connecting to %(host)s" % self.config)
         self.conn = amqp.Connection(**self.config)
         self.chan = self.conn.channel()
 
@@ -64,8 +64,8 @@ class Jessica(object):
         return msg
 
     def send(self, exchange, message):
-        logging.info("Sending message to %s: %s" % (exchange,
-                                                    repr(message)))
+        log.info("Sending message to %s: %s" % (exchange,
+                                                repr(message)))
 
         msg = self.build_message(message)
 
@@ -82,7 +82,10 @@ class JessicaMiddleware(Jessica):
 
     def __call__(self, environ, start_response):
         environ["Jessica"] = []
-        response = self.application(environ, start_response)
+        app_iter = self.application(environ, start_response)
         for exchange, message in environ["Jessica"]:
             self.send(exchange, message)
-        return response
+        for data in app_iter:
+            yield data
+        if hasattr(app_iter, "close"):
+            app_iter.close()

@@ -13,6 +13,7 @@ setup(name='jessica',
       license='BSD',
       url='http://github.com/greut/jessica',
       packages=['jessica'],
-      install_requires=['amqplib'],
+      install_requires=['amqplib',
+                        'txamqp'],
       test_suite='tests',
       tests_require=['mock', 'WebTest'])

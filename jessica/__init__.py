@@ -50,24 +50,28 @@ class Jessica(object):
         self.conn = amqp.Connection(**self.config)
         self.chan = self.conn.channel()
 
-    def build_message(self, message):
-        if self.config["pickle"]:
+    def build_message(self, message, durable=None, pickled=None, **kwargs):
+        if durable is None:
+            durable = self.config["durable"]
+            if durable is True:
+                kwargs["delivery_mode"] = 2
+
+        if pickled is None:
+            pickled = self.config["pickle"]
+
+        if pickled:
             log.info("Message is pickled")
             message = pickle.dumps(message)
 
-        msg = amqp.Message(message)
-
-        if self.config["durable"]:
-            log.info("Message is durable")
-            msg.properties["delivery_mode"] = 2
+        msg = amqp.Message(message, **kwargs)
 
         return msg
 
-    def send(self, exchange, message):
+    def send(self, exchange, message, **kwargs):
         log.info("Sending message to %s: %s" % (exchange,
                                                 repr(message)))
 
-        msg = self.build_message(message)
+        msg = self.build_message(message, **kwargs)
 
         self.chan.basic_publish(msg, exchange=exchange)
 

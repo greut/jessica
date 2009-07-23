@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-VERSION = (0, 1, 1)
+VERSION = (0, 1, 2)
 __author__ = "Yoan Blanc <yoan@dosimple.ch>"
 __license__ = "BSD"
 
@@ -21,7 +21,8 @@ CONFIG = {"host": "localhost:5672",
           "ssl": False,
           "insist": False,
           "durable": False,
-          "pickle": False}
+          "pickled": False,
+          "dummy": False}
 
 
 log = logging.getLogger("Jessica")
@@ -37,13 +38,14 @@ class Jessica(object):
         log.debug("Config is: %s" % config)
 
         self.config = config
-
-        self.connect()
+        
+        if not self.config["dummy"]:
+            self.connect()
 
     def __del__(self):
-        log.info("Disconnecting from %(host)s" % self.config)
-        self.chan.close()
-        self.conn.close()
+        if hasattr(self, "chan"):
+            self.chan.close()
+            self.conn.close()
 
     def connect(self):
         log.info("Connecting to %(host)s" % self.config)
@@ -57,7 +59,7 @@ class Jessica(object):
                 kwargs["delivery_mode"] = 2
 
         if pickled is None:
-            pickled = self.config["pickle"]
+            pickled = self.config["pickled"]
 
         if pickled:
             log.info("Message is pickled")
@@ -71,9 +73,9 @@ class Jessica(object):
         log.info("Sending message to %s: %s" % (exchange,
                                                 repr(message)))
 
-        msg = self.build_message(message, **kwargs)
-
-        self.chan.basic_publish(msg, exchange=exchange)
+        if not self.config["dummy"]:
+            msg = self.build_message(message, **kwargs)
+            self.chan.basic_publish(msg, exchange=exchange)
 
 
 class JessicaMiddleware(Jessica):

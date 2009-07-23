@@ -42,19 +42,19 @@ class TestJessica(unittest.TestCase):
         assert mock.msgs[0][1].body == 'Hello, World!'
 
     def testPickle(self):
-        mock = JessicaMock({'pickle': True})
+        mock = JessicaMock({'pickled': True})
         mock.send('Test', 'Hello, World!')
 
         assert len(mock.msgs) == 1
         assert mock.msgs[0][0] == 'Test'
-        assert pickle.loads(mock.msgs[0][1].body) =='Hello, World!'
+        assert pickle.loads(mock.msgs[0][1].body) == 'Hello, World!'
 
-        mock = JessicaMock(pickle=True)
+        mock = JessicaMock(pickled=True)
         mock.send('Test', 'Hello, World!')
 
         assert len(mock.msgs) == 1
         assert mock.msgs[0][0] == 'Test'
-        assert pickle.loads(mock.msgs[0][1].body) =='Hello, World!'
+        assert pickle.loads(mock.msgs[0][1].body) == 'Hello, World!'
 
     def testDurable(self):
         mock = JessicaMock({'durable': True})

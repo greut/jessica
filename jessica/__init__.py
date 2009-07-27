@@ -89,9 +89,12 @@ class JessicaMiddleware(Jessica):
     def __call__(self, environ, start_response):
         environ["Jessica"] = []
         app_iter = self.application(environ, start_response)
-        for exchange, message in environ["Jessica"]:
-            self.send(exchange, message)
+ 
         for data in app_iter:
             yield data
         if hasattr(app_iter, "close"):
             app_iter.close()
+        
+        for exchange, message in environ["Jessica"]:
+            self.send(exchange, message)
+

@@ -6,6 +6,7 @@ __license__ = "BSD"
 
 import logging
 
+from socket import error
 from amqplib import client_0_8 as amqp
 
 try:
@@ -38,6 +39,7 @@ class Jessica(object):
         log.debug("Config is: %s" % config)
 
         self.config = config
+        self.queue = []
         
         if not self.config["dummy"]:
             self.connect()
@@ -52,6 +54,10 @@ class Jessica(object):
         self.conn = amqp.Connection(**self.config)
         self.chan = self.conn.channel()
 
+        while len(self.queue):
+            exchange, queue, kwargs = self.queue.pop()
+            self.send(exchange, queue, **kwargs)
+
     def build_message(self, message, durable=None, pickled=None, **kwargs):
         if durable is None:
             durable = self.config["durable"]
@@ -65,9 +71,7 @@ class Jessica(object):
             log.info("Message is pickled")
             message = pickle.dumps(message)
 
-        msg = amqp.Message(message, **kwargs)
-
-        return msg
+        return amqp.Message(message, **kwargs)
 
     def send(self, exchange, message, **kwargs):
         log.info("Sending message to %s: %s" % (exchange,
@@ -75,7 +79,12 @@ class Jessica(object):
 
         if not self.config["dummy"]:
             msg = self.build_message(message, **kwargs)
-            self.chan.basic_publish(msg, exchange=exchange)
+            try:
+                self.chan.basic_publish(msg, exchange=exchange)
+            except error, e:
+                log.error(e)
+                self.queue.push((exchange, message, kwargs))
+                self.connect()
 
 
 class JessicaMiddleware(Jessica):
@@ -97,4 +106,3 @@ class JessicaMiddleware(Jessica):
         
         for exchange, message in environ["Jessica"]:
             self.send(exchange, message)
-

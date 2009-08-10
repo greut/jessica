@@ -1,3 +1,8 @@
+try:
+    import cPickle as pickle
+except ImportError, e:
+    import pickle
+
 from twisted.internet import reactor, defer, protocol
 from twisted.python import log
 
@@ -16,9 +21,10 @@ class TwistedJessica(AMQClient):
     host = "localhost"
     port = 5672
 
-    def __init__(self, exchange, durable=False):
+    def __init__(self, exchange, durable=False, pickled=False):
         self.exchange = exchange
         self.durable = durable
+        self.pickled = pickled
         self._queue = defer.DeferredQueue()
         self.start()
 
@@ -47,6 +53,9 @@ class TwistedJessica(AMQClient):
         yield chan0.connection_close()
 
     def _send_message(self, message):
+        if self.pickled:
+            message = pickle.dumps(message)
+
         msg = Content(message)
         
         if self.durable:
